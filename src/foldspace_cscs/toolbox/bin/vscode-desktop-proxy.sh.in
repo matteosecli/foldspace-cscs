@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# ProxyCommand target for VS Code desktop, run on the @@CLUSTER@@ login node
+# (see Host foldspace-cscs-@@CLUSTER@@ in foldspace-cscs's ssh config).
+# Connects to the SSH server of the node running your newest foldspace-cscs
+# vscode job. pam_slurm_adopt only lets you into nodes where you have a job,
+# and puts the session inside that job.
+# -a: also jobs in hidden partitions (e.g. jupyterhub), which squeue omits by default
+nodes=$(squeue -a --me -h -t RUNNING -n foldspace-cscs.vscode -o '%S %N' | sort | tail -n 1 | awk '{print $2}')
+if [[ -z $nodes ]]; then
+  echo "foldspace-cscs: you have no running vscode job on @@CLUSTER@@" >&2
+  exit 1
+fi
+node=$(scontrol show hostnames "$nodes" | head -n 1)
+exec nc "$node" 22

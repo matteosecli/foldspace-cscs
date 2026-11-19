@@ -1,0 +1,21 @@
+# Users install from the `stable` branch (pip install git+...@stable).
+# Every pushed release tag moves it to the newest v* tag (by version, so a
+# patch tag for an older release does not move it backwards).
+name: Move stable to the latest release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  stable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Point stable at the newest release tag
+        run: |
+          latest=$(git tag --list 'v*' --sort=-v:refname | head -n 1)
+          echo "stable -> $latest"
+          git push --force origin "$(git rev-parse "$latest^{commit}"):refs/heads/stable"

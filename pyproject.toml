@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "foldspace-cscs"
+version = "0.1.0"
+description = "CSCS (Alps) plug-in for CINECA's Foldspace: JupyterLab and VS Code in Slurm jobs, tunnelled to your laptop."
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.9"
+dependencies = [
+  # Upstream client, used unmodified. Pinned because we rely on its CLI
+  # behaviour (--host/--toolbox/--tool, sbatch passthrough, plain `ssh`).
+  "foldspace==1.0.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/matteosecli/foldspace-cscs"
+Upstream = "https://gitlab.hpc.cineca.it/interactive_computing/foldspace"
+
+[project.scripts]
+foldspace-cscs = "foldspace_cscs.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+foldspace_cscs = ["toolbox/*", "toolbox/**/*"]

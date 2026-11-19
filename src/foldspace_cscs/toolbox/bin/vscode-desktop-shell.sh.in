@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# RemoteCommand for VS Code desktop, run on the job's node. An SSH session into
+# the job does not see its uenv or container (both exist per job step), so
+# enter them here, using what the job saved. VS Code then starts its server
+# in this shell.
+env_file=@@USER_DIR@@/sessions/desktop-$(hostname).env
+if [[ -r $env_file ]]; then
+  source "$env_file"
+else
+  echo "foldspace-cscs: no vscode job details for $(hostname); starting a plain shell" >&2
+fi
+if [[ -n ${FOLDSPACE_CSCS_EDF:-} ]]; then
+  # Container: a new step of the job in the same EDF, running a login shell
+  # (VS Code sends its commands on stdin). The VS Code server is installed
+  # under ~/.vscode-server, mounted even if the EDF does not mount $HOME.
+  mkdir -p "$HOME/.vscode-server"
+  exec srun --jobid="$SLURM_JOB_ID" --overlap --nodes=1 --ntasks=1 \
+       --cpus-per-task="${FOLDSPACE_CSCS_CPUS:-1}" --cpu-bind=none \
+       --environment="$FOLDSPACE_CSCS_EDF" --container-workdir="${FOLDSPACE_CSCS_WORKDIR:-$HOME}" \
+       --container-mounts="$HOME/.vscode-server:$HOME/.vscode-server" \
+       bash -l
+fi
+if [[ -n ${FOLDSPACE_CSCS_UENV:-} ]]; then
+  exec uenv start --ignore-tty "$FOLDSPACE_CSCS_UENV" ${FOLDSPACE_CSCS_VIEW:+--view="$FOLDSPACE_CSCS_VIEW"}
+fi
+exec "${SHELL:-/bin/bash}" -l

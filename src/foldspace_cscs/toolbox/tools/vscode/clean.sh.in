@@ -1,0 +1,2 @@
+# Sourced by start_tool.sh when the job ends: forget the VS Code desktop details.
+rm -f "@@USER_DIR@@/sessions/desktop-$(hostname).env"

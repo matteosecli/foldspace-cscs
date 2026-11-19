@@ -1,0 +1,11 @@
+# credentials: never commit
+foldpsace-cscs-*.txt
+*.key
+*secret*
+# build artefacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+.venv/
+.DS_Store

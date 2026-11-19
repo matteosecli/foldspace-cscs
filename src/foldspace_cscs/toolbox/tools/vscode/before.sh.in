@@ -1,0 +1,42 @@
+# Sourced by start_tool.sh. Must set: port, password.
+trap 'echo "SIGTERM received, cleaning up"; clean_up 143' SIGTERM
+
+# Installed ahead of time on the login node by foldspace-cscs (install-vscode-web.sh).
+vscode_dir=$FOLDSPACE_CSCS_PREFIX/vscode-web/current
+export vscode_bin=$vscode_dir/bin/code-server
+if [[ ! -x $vscode_bin ]]; then
+  echo "ERROR: VS Code web server not installed for $arch. On your laptop run: foldspace-cscs @@CLUSTER@@ setup" >&2
+  clean_up 1
+fi
+
+port=$(find_port "$host" 20000 60000)
+password=$(create_password 32)  # short enough for the URL not to wrap in the panel
+
+# Per-architecture state: extensions may contain native binaries.
+export vscode_data=$HOME/.local/$arch/share/vscode-web
+mkdir -p "$vscode_data"
+
+export vscode_token_file=$session_files_dir/vscode-token
+(
+umask 077
+printf '%s' "$password" > "$vscode_token_file"
+)
+
+# VS Code desktop (see bin/vscode-desktop-shell.sh): save what an SSH session
+# into this node needs to rejoin the job, i.e. its Slurm job and its uenv.
+(
+umask 077
+{
+  for v in SLURM_JOB_ID SLURM_JOBID SLURM_JOB_ACCOUNT SLURM_JOB_PARTITION SLURM_JOB_NODELIST \
+           SLURM_NNODES SLURM_JOB_NUM_NODES SLURM_CPUS_ON_NODE SLURM_JOB_CPUS_PER_NODE; do
+    [[ -n ${!v:-} ]] && printf 'export %s=%q\n' "$v" "${!v}"
+  done
+  # The exact images and mount points of the job; views without their mount point.
+  printf 'FOLDSPACE_CSCS_UENV=%q\n' "${UENV_MOUNT_LIST:-$(paste -sd, <<<"$uenvs")}"
+  printf 'FOLDSPACE_CSCS_VIEW=%q\n' "$(sed -E 's#(^|,)/[^:,]*:#\1#g' <<<"${UENV_VIEW:-}")"
+  printf 'FOLDSPACE_CSCS_EDF=%q\n' "$FOLDSPACE_CSCS_EDF"
+  printf 'FOLDSPACE_CSCS_WORKDIR=%q\n' "$PWD"
+  printf 'FOLDSPACE_CSCS_CPUS=%q\n' "${SLURM_CPUS_ON_NODE:-1}"
+} > "$session_files_dir/desktop.env"
+)
+ln -sfn "$session_files_dir/desktop.env" "@@USER_DIR@@/sessions/desktop-$(hostname).env"
