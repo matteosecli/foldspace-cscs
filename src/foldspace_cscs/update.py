@@ -90,7 +90,8 @@ def remote_commit(url: str, ref: str | None) -> tuple[str | None, bool]:
 
 
 def _run(cmd: list[str]) -> None:
-    console.print(f"[grey50]$ {' '.join(cmd)}[/grey50]")
+    shown = ["python" if c == sys.executable else c for c in cmd]
+    console.print(f"$ {' '.join(shown)}", style="grey50", markup=False)
     if subprocess.run(cmd).returncode != 0:
         raise UpdateError(f"`{' '.join(cmd[:3])} …` failed (see above)")
 
@@ -121,7 +122,7 @@ def update() -> int:
         if how == "pip":
             if subprocess.run([sys.executable, "-m", "pip", "--version"], capture_output=True).returncode:
                 raise UpdateError(f"this environment has no pip; reinstall foldspace-cscs, see {REPO}")
-            _run([sys.executable, "-m", "pip", "install", "--quiet", "--upgrade",
+            _run([sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check", "--upgrade",
                   f"git+{url}" + (f"@{ref}" if ref else "")])
         else:
             if not shutil.which(how):
