@@ -122,14 +122,21 @@ def update() -> int:
         if how == "pip":
             if subprocess.run([sys.executable, "-m", "pip", "--version"], capture_output=True).returncode:
                 raise UpdateError(f"this environment has no pip; reinstall foldspace-cscs, see {REPO}")
-            _run([sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check", "--upgrade",
-                  f"git+{url}" + (f"@{ref}" if ref else "")])
+            pip = [sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check"]
+            spec = f"git+{url}" + (f"@{ref}" if ref else "")
+            _run(pip + ["--upgrade", spec])
+            # pip keeps an installed package whose version number did not
+            # change (e.g. two commits on main): then replace it explicitly,
+            # and let pip add any dependency the new commit needs.
+            if installed()["direct_url"]["vcs_info"].get("commit_id") != latest:
+                _run(pip + ["--force-reinstall", "--no-deps", spec])
+                _run(pip + [spec])
         else:
             if not shutil.which(how):
                 raise UpdateError(f"foldspace-cscs was installed with {how}, but `{how}` is not on your PATH")
             _run(["pipx", "upgrade", DIST] if how == "pipx" else ["uv", "tool", "upgrade", DIST])
-            # Both may skip the update when the version number did not change
-            # (e.g. two commits on main): then force a re-install.
+            # Same as for pip: both may keep the old commit when the version
+            # number did not change, so then force a re-install.
             if installed()["direct_url"]["vcs_info"].get("commit_id") != latest:
                 _run(["pipx", "reinstall", DIST] if how == "pipx"
                      else ["uv", "tool", "upgrade", "--reinstall", DIST])
@@ -152,4 +159,4 @@ def _switch_hint(how: str, url: str) -> str:
         return f"  pipx install --force git+{url}@stable"
     if how == "uv":
         return f"  uv tool install --force git+{url}@stable"
-    return f"  {sys.executable} -m pip install --upgrade git+{url}@stable"
+    return f"  {sys.executable} -m pip install --force-reinstall git+{url}@stable"
