@@ -95,7 +95,7 @@ def parse(argv: list[str]) -> argparse.Namespace:
 # tool goes to Foldspace/sbatch. An own option found there is still passed on
 # (it might be a real sbatch option one day), but the user is warned at once.
 # (--user is not checked: Foldspace has its own --user, with the same meaning.)
-OWN_OPTIONS = ("--key", "--headless", "--renew", "--yes", "--jupyterlab-uenv")
+OWN_OPTIONS = ("--key", "--headless", "--renew", "--yes", "--jupyterlab-uenv", "--update")
 OWN_WITH_VALUE = ("--key", "--jupyterlab-uenv")
 
 
