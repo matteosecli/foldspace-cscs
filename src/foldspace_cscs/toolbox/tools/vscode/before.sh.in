@@ -5,7 +5,7 @@ trap 'echo "SIGTERM received, cleaning up"; clean_up 143' SIGTERM
 vscode_dir=$FOLDSPACE_CSCS_PREFIX/vscode-web/current
 export vscode_bin=$vscode_dir/bin/code-server
 if [[ ! -x $vscode_bin ]]; then
-  echo "ERROR: VS Code web server not installed for $arch. On your laptop run: foldspace-cscs @@CLUSTER@@ setup" >&2
+  echo "ERROR: VS Code web server not installed for $arch. On your computer, run: foldspace-cscs @@CLUSTER@@ setup" >&2
   clean_up 1
 fi
 

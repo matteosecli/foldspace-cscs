@@ -21,6 +21,8 @@ echo "alias foldspace-cscs='$HOME/.local/share/foldspace-cscs/bin/foldspace-cscs
 source ~/.$(basename "$SHELL")rc
 ```
 
+The last two lines add an alias to your shell's startup file; you may have to adapt the file name to your shell (e.g. `~/.bash_profile` for bash on macOS).
+
 Run:
 
 ```bash
@@ -101,8 +103,10 @@ No Microsoft tunnel is used: the connection goes over SSH, like the browser one.
 | `--user NAME` | CSCS username. Default: read from the certificate. |
 | `--headless` | If signing is needed, log in with a device code instead of a local browser. |
 | `--renew` | Sign a new certificate even if the current one is valid. |
-| `-y` | Do not ask before signing. |
+| `--yes` | Do not ask before signing. |
 | `--jupyterlab-uenv UENV` | uenv providing JupyterLab. Default: `jupyterlab/v4.1.8:v3`. |
+
+These options go before the cluster name, e.g. `foldspace-cscs --headless eiger vscode -A <project>`; everything after the tool goes to `sbatch`.
 
 ## Update and uninstall
 

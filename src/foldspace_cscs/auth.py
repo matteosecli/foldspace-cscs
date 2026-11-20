@@ -10,10 +10,12 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from InquirerPy import inquirer
 from rich.console import Console
 
 console = Console(highlight=False)  # no automatic colouring of paths, numbers, dates
@@ -141,10 +143,26 @@ def sign_new(key: Path, headless: bool) -> None:
         cmd.append("--headless")
     if subprocess.run(cmd).returncode != 0:
         raise AuthError("`cscs-key sign` failed")
-    console.print("[grey50]Keys currently registered with CSCS (for visual confirmation):[/grey50]")
+    console.print("[grey50]Your keys registered with CSCS:[/grey50]")
     subprocess.run(["cscs-key", "list"])
     if shutil.which("ssh-add"):
         subprocess.run(["ssh-add", "-t", "1d", str(key)])
+
+
+def confirm_signing() -> bool:
+    """Ask before signing (it uses one of the limited daily signatures).
+
+    An arrow-key menu, like Foldspace's own questions; Enter picks the
+    highlighted choice, which is to sign. Without a terminal to ask in,
+    the answer is no (use --yes).
+    """
+    if not sys.stdin.isatty():
+        return False
+    options = ["Sign a new 24 h certificate now (uses one of your daily cscs-key signatures)",
+               "Abort"]
+    choice = inquirer.select(message="What do you want to do?", choices=options,
+                             default=options[0], qmark="", amark="").execute()
+    return choice == options[0]
 
 
 def ensure_certificate(key: Path, *, headless: bool = False, assume_yes: bool = False,
@@ -163,11 +181,9 @@ def ensure_certificate(key: Path, *, headless: bool = False, assume_yes: bool = 
     reason = "you asked for a new certificate" if force else describe(info, key)
     console.print(f"[yellow]![/yellow] {reason}.")
     check_signing_prerequisites(key)
-    if not assume_yes:
-        answer = console.input("Sign a new 24 h certificate with `cscs-key sign` now? "
-                               "(uses one of your daily signatures) [y/N] ")
-        if answer.strip().lower() not in ("y", "yes"):
-            raise AuthError("No valid CSCS certificate; aborting.")
+    if not assume_yes and not confirm_signing():
+        raise AuthError("No valid CSCS certificate; aborting. "
+                        "(Run again and choose to sign, or pass --yes to sign without asking.)")
     sign_new(key, headless)
     info = read_cert(key)
     if not (info and info.is_valid()):

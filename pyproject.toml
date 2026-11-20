@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "foldspace-cscs"
-version = "0.1.0"
-description = "CSCS (Alps) plug-in for CINECA's Foldspace: JupyterLab and VS Code in Slurm jobs, tunnelled to your laptop."
+version = "0.2.0"
+description = "CSCS (Alps) plug-in for CINECA's Foldspace: JupyterLab and VS Code in Slurm jobs, used from your own computer."
 readme = "README.md"
 license = "GPL-3.0-or-later"
 requires-python = ">=3.9"
@@ -13,6 +13,9 @@ dependencies = [
   # Upstream client, used unmodified. Pinned because we rely on its CLI
   # behaviour (--host/--toolbox/--tool, sbatch passthrough, plain `ssh`).
   "foldspace==1.0.3",
+  # also used directly (both are dependencies of Foldspace too)
+  "rich",
+  "InquirerPy",
 ]
 
 [project.urls]

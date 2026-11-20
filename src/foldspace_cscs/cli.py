@@ -45,7 +45,7 @@ def parse(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="foldspace-cscs",
         description="Interactive Jupyter / VS Code sessions on CSCS Alps compute nodes, "
-                    "tunnelled to your laptop (a CSCS plug-in for CINECA's Foldspace).",
+                    "used from your own computer (a CSCS plug-in for CINECA's Foldspace).",
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         allow_abbrev=False,
@@ -58,13 +58,42 @@ def parse(argv: list[str]) -> argparse.Namespace:
                    help="if a new certificate is needed, use cscs-key's device flow (no local browser)")
     p.add_argument("--renew", action="store_true",
                    help="sign a new certificate even if the current one looks valid")
-    p.add_argument("-y", "--yes", action="store_true", help="do not ask before signing a new certificate")
+    p.add_argument("--yes", action="store_true", help="do not ask before signing a new certificate")
     p.add_argument("--jupyterlab-uenv", default=JUPYTERLAB_UENV,
                    help=f"uenv providing JupyterLab, mounted at /user-tools (default: {JUPYTERLAB_UENV})")
     p.add_argument("cluster", choices=sorted(CLUSTERS))
     p.add_argument("action", choices=ACTIONS)
     p.add_argument("passthrough", nargs=argparse.REMAINDER, help=argparse.SUPPRESS)
-    return p.parse_args(argv)
+    a = p.parse_args(argv)
+    misplaced = own_options_in(a.passthrough)
+    if misplaced:
+        # A warning, not an error: sbatch could one day have an option with
+        # the same name, and then this would be a legitimate sbatch option.
+        name = misplaced.split("=")[0].split()[0]
+        console.print(f"! {name} comes after the tool, so it is passed to sbatch. If you meant the "
+                      "foldspace-cscs option, put it before the cluster name, e.g. "
+                      f"foldspace-cscs {misplaced} {a.cluster} {a.action} ...",
+                      style="yellow", markup=False, highlight=False)
+    return a
+
+
+# foldspace-cscs's own options go before the cluster name; everything after the
+# tool goes to Foldspace/sbatch. An own option found there is still passed on
+# (it might be a real sbatch option one day), but the user is warned at once.
+# (--user is not checked: Foldspace has its own --user, with the same meaning.)
+OWN_OPTIONS = ("--key", "--headless", "--renew", "--yes", "--jupyterlab-uenv")
+OWN_WITH_VALUE = ("--key", "--jupyterlab-uenv")
+
+
+def own_options_in(args: list[str]) -> str | None:
+    """The first own option found in `args`, with its value if it takes one."""
+    for i, arg in enumerate(args):
+        name, eq, _ = arg.partition("=")
+        if name in OWN_OPTIONS:
+            if name in OWN_WITH_VALUE and not eq and i + 1 < len(args):
+                return f"{arg} {args[i + 1]}"
+            return arg
+    return None
 
 
 def split_uenv_options(args: list[str]) -> tuple[list[str], list[str], list[str], list[str]]:
