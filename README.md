@@ -117,11 +117,7 @@ Update to the latest release:
 foldspace-cscs --update
 ```
 
-It follows what you installed: `@stable` gets the latest release, `@main` the latest development version. It works for installs made with pip (as above), pipx or uv; an install pinned to a version tag stays as it is. If `--update` isn't available yet (versions before 0.3.0), update with:
-
-```bash
-~/.local/share/foldspace-cscs/bin/pip install --upgrade git+https://github.com/matteosecli/foldspace-cscs.git@stable
-```
+It follows what you installed: `@stable` gets the latest release, `@main` the latest development version. It works for installs made with pip (as above), pipx or uv; an install pinned to a version tag stays as it is.
 
 To install a specific version instead, put its tag in place of `stable` (e.g. `@v0.1.0`; see the [tags](https://github.com/matteosecli/foldspace-cscs/tags)). `@main` gives the latest development version.
 
