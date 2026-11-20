@@ -105,12 +105,19 @@ No Microsoft tunnel is used: the connection goes over SSH, like the browser one.
 | `--renew` | Sign a new certificate even if the current one is valid. |
 | `--yes` | Do not ask before signing. |
 | `--jupyterlab-uenv UENV` | uenv providing JupyterLab. Default: `jupyterlab/v4.1.8:v3`. |
+| `--update` | Update foldspace-cscs (see [Update and uninstall](#update-and-uninstall)). |
 
 These options go before the cluster name, e.g. `foldspace-cscs --headless eiger vscode -A <project>`; everything after the tool goes to `sbatch`.
 
 ## Update and uninstall
 
 Update to the latest release:
+
+```bash
+foldspace-cscs --update
+```
+
+It follows what you installed: `@stable` gets the latest release, `@main` the latest development version. It works for installs made with pip (as above), pipx or uv; an install pinned to a version tag stays as it is. If `--update` isn't available yet (versions before 0.3.0), update with:
 
 ```bash
 ~/.local/share/foldspace-cscs/bin/pip install --upgrade git+https://github.com/matteosecli/foldspace-cscs.git@stable

@@ -145,9 +145,10 @@ def update() -> int:
         if new != latest:
             raise UpdateError(f"the update ran, but the installed commit is {_short(new)}, "
                               f"not {_short(latest)}")
-        console.print(f"[green]✓[/green] foldspace-cscs {before['version']} → {after['version']} "
-                      f"({channel}, {_short(new)}). The job scripts on the clusters are updated on "
-                      "your next run.")
+        versions = (before["version"] if before["version"] == after["version"]
+                    else f"{before['version']} → {after['version']}")
+        console.print(f"[green]✓[/green] Updated foldspace-cscs {versions} ({channel}, {_short(commit)} → "
+                      f"{_short(new)}). The job scripts on the clusters are updated on your next run.")
         return 0
     except (UpdateError, subprocess.TimeoutExpired) as e:
         console.print(f"[red]✗ {e}[/red]")
