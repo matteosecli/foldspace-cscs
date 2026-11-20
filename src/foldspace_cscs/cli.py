@@ -41,6 +41,17 @@ examples:
 """
 
 
+class UpdateAction(argparse.Action):
+    """--update runs and exits right away, like --version (no cluster or tool needed)."""
+
+    def __init__(self, option_strings, dest, **kwargs):
+        super().__init__(option_strings, dest, nargs=0, default=argparse.SUPPRESS, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        from .update import update
+        parser.exit(update())
+
+
 def parse(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(
         prog="foldspace-cscs",
@@ -51,6 +62,9 @@ def parse(argv: list[str]) -> argparse.Namespace:
         allow_abbrev=False,
     )
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    p.add_argument("--update", action=UpdateAction,
+                   help="update foldspace-cscs to the newest version of the branch it was installed from "
+                        "(stable or main), then exit")
     p.add_argument("--key", type=Path, default=DEFAULT_KEY,
                    help=f"private key signed by cscs-key (default: {DEFAULT_KEY})")
     p.add_argument("--user", help="CSCS username (default: read from the certificate)")
